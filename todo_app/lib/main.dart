@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:todo_app/screens/home.dart';
 
 void main() {
   runApp(const MyApp());
@@ -13,10 +14,10 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'ToDo App',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromARGB(255, 138, 110, 185)),
         useMaterial3: true,
       ),
-      home: MyApp(),
+      home: Home(),
     );
   }
 }
