@@ -1,64 +1,62 @@
 import 'package:flutter/material.dart';
-
 import 'package:todo_app/models/todo.dart';
 import 'package:todo_app/constants/colors.dart';
 
 class ToDoItem extends StatelessWidget {
   final ToDo todo;
-  final onToDoChanged;
-  final onDeleteItem;
+  final Function(ToDo) onToDoChanged;
+  final Function(String) onDeleteItem;
 
   const ToDoItem({
     super.key,
     required this.todo,
     required this.onToDoChanged,
-    required this.onDeleteItem
+    required this.onDeleteItem,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.only(bottom: 20),
+      decoration: BoxDecoration(
+        color: TodoColors.cardBg,
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: TodoColors.text.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
       child: ListTile(
-        onTap: () {
-          // print('Clicked on Todo Item.');
-          onToDoChanged(todo);
-        },
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-        tileColor: Colors.white,
-        leading: Icon(
-          todo.isDone ? Icons.check_box : Icons.check_box_outline_blank,
-          color: tdBlue,
+        onTap: () => onToDoChanged(todo),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        leading: Container(
+          padding: const EdgeInsets.all(2),
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: todo.isDone ? TodoColors.success : TodoColors.primary,
+              width: 2,
+            ),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(
+            todo.isDone ? Icons.check : Icons.circle_outlined,
+            color: todo.isDone ? TodoColors.success : TodoColors.primary,
+          ),
         ),
         title: Text(
           todo.todoText!,
           style: TextStyle(
-            fontSize: 16,
-            color: tdBlack,
+            color: TodoColors.text,
             decoration: todo.isDone ? TextDecoration.lineThrough : null,
+            decorationColor: TodoColors.textLight,
           ),
         ),
-        trailing: Container(
-          padding: EdgeInsets.all(0),
-          margin: EdgeInsets.symmetric(vertical: 12),
-          height: 35,
-          width: 35,
-          decoration: BoxDecoration(
-            color: tdRed,
-            borderRadius: BorderRadius.circular(5),
-          ),
-          child: IconButton(
-            color: Colors.white,
-            iconSize: 18,
-            icon: Icon(Icons.delete),
-            onPressed: () {
-              // print('Clicked on delete icon');
-              onDeleteItem(todo.id);
-            },
-          ),
+        trailing: IconButton(
+          icon: const Icon(Icons.delete_outline),
+          color: TodoColors.delete,
+          onPressed: () => onDeleteItem(todo.id!),
         ),
       ),
     );

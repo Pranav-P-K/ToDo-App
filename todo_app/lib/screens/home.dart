@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'package:todo_app/models/todo.dart';
 import 'package:todo_app/constants/colors.dart';
 import 'package:todo_app/widgets/todo_item.dart';
@@ -25,106 +24,234 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: tdBGColor,
-      appBar: _buildAppBar(),
-      body: Stack(
-        children: [
-          Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 15,
+      backgroundColor: TodoColors.background,
+      body: SafeArea(
+        child: CustomScrollView(
+          slivers: [
+            _buildSliverAppBar(),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  children: [
+                    _buildSearchBox(),
+                    const SizedBox(height: 30),
+                    _buildTodayProgress(),
+                    const SizedBox(height: 30),
+                    _buildTodoList(),
+                  ],
+                ),
+              ),
             ),
-            child: Column(
-              children: [
-                searchBox(),
-                Expanded(
-                  child: ListView(
-                    children: [
-                      Container(
-                        margin: EdgeInsets.only(
-                          top: 50,
-                          bottom: 20,
-                        ),
-                        child: Text(
-                          'All ToDos',
-                          style: TextStyle(
-                            fontSize: 30,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                      for (ToDo todoo in _foundToDo.reversed)
-                        ToDoItem(
-                          todo: todoo,
-                          onToDoChanged: _handleToDoChange,
-                          onDeleteItem: _deleteToDoItem,
-                        ),
-                    ],
-                  ),
-                )
+          ],
+        ),
+      ),
+      floatingActionButton: _buildAddTodoButton(),
+    );
+  }
+
+  Widget _buildSliverAppBar() {
+    return SliverAppBar(
+      expandedHeight: 120,
+      floating: true,
+      backgroundColor: TodoColors.background,
+      elevation: 0,
+      flexibleSpace: FlexibleSpaceBar(
+        title: const Text(
+          'My Tasks',
+          style: TextStyle(
+            color: TodoColors.text,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        background: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                TodoColors.primary.withOpacity(0.1),
+                TodoColors.background,
               ],
             ),
           ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Row(children: [
-              Expanded(
-                child: Container(
-                  margin: EdgeInsets.only(
-                    bottom: 20,
-                    right: 20,
-                    left: 20,
-                  ),
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Colors.grey,
-                        offset: Offset(0.0, 0.0),
-                        blurRadius: 10.0,
-                        spreadRadius: 0.0,
-                      ),
-                    ],
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: TextField(
-                    controller: _todoController,
-                    decoration: InputDecoration(
-                        hintText: 'Add a new todo item',
-                        border: InputBorder.none),
-                  ),
-                ),
-              ),
-              Container(
-                margin: EdgeInsets.only(
-                  bottom: 20,
-                  right: 20,
-                ),
-                child: ElevatedButton(
-                  onPressed: () {
-                    _addToDoItem(_todoController.text);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: tdBlue,
-                    minimumSize: Size(60, 60),
-                    elevation: 10,
-                  ),
-                  child: Text(
-                    '+',
-                    style: TextStyle(
-                      fontSize: 40,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ]),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSearchBox() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 15),
+      decoration: BoxDecoration(
+        color: TodoColors.cardBg,
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: TodoColors.primary.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
           ),
         ],
+      ),
+      child: TextField(
+        onChanged: _runFilter,
+        decoration: const InputDecoration(
+          contentPadding: EdgeInsets.all(0),
+          prefixIcon: Icon(Icons.search, color: TodoColors.textLight),
+          prefixIconConstraints: BoxConstraints(maxHeight: 20, minWidth: 25),
+          border: InputBorder.none,
+          hintText: 'Search tasks',
+          hintStyle: TextStyle(color: TodoColors.textLight),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTodayProgress() {
+    final completedTasks = _foundToDo.where((todo) => todo.isDone).length;
+    final totalTasks = _foundToDo.length;
+    final progress = totalTasks > 0 ? completedTasks / totalTasks : 0.0;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [TodoColors.primary, TodoColors.secondary],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: TodoColors.primary.withOpacity(0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Today\'s Progress',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 15),
+          LinearProgressIndicator(
+            value: progress,
+            backgroundColor: Colors.white.withOpacity(0.3),
+            valueColor: const AlwaysStoppedAnimation(Colors.white),
+            borderRadius: BorderRadius.circular(10),
+            minHeight: 10,
+          ),
+          const SizedBox(height: 10),
+          Text(
+            '$completedTasks of $totalTasks tasks completed',
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.9),
+              fontSize: 14,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTodoList() {
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: _foundToDo.length,
+      itemBuilder: (context, index) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 15),
+          child: ToDoItem(
+            todo: _foundToDo[index],
+            onToDoChanged: _handleToDoChange,
+            onDeleteItem: _deleteToDoItem,
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildAddTodoButton() {
+    return FloatingActionButton.extended(
+      onPressed: () => _showAddTodoDialog(context),
+      backgroundColor: TodoColors.primary,
+      icon: const Icon(Icons.add),
+      label: const Text('Add Task'),
+    );
+  }
+
+  void _showAddTodoDialog(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.75,
+        decoration: const BoxDecoration(
+          color: TodoColors.cardBg,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+          top: 20,
+          left: 20,
+          right: 20,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Add New Task',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: TodoColors.text,
+              ),
+            ),
+            const SizedBox(height: 20),
+            TextField(
+              controller: _todoController,
+              decoration: const InputDecoration(
+                hintText: 'Enter task description',
+                border: OutlineInputBorder(),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: TodoColors.primary),
+                ),
+              ),
+              maxLines: 3,
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: () {
+                  _addToDoItem(_todoController.text);
+                  Navigator.pop(context);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: TodoColors.primary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: const Text(
+                  'Add Task',
+                  style: TextStyle(fontSize: 16),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -166,55 +293,5 @@ class _HomeState extends State<Home> {
     setState(() {
       _foundToDo = results;
     });
-  }
-
-  Widget searchBox() {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 15),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: TextField(
-        onChanged: (value) => _runFilter(value),
-        decoration: InputDecoration(
-          contentPadding: EdgeInsets.all(0),
-          prefixIcon: Icon(
-            Icons.search,
-            color: tdBlack,
-            size: 20,
-          ),
-          prefixIconConstraints: BoxConstraints(
-            maxHeight: 20,
-            minWidth: 25,
-          ),
-          border: InputBorder.none,
-          hintText: 'Search',
-          hintStyle: TextStyle(color: tdGrey),
-        ),
-      ),
-    );
-  }
-
-  AppBar _buildAppBar() {
-    return AppBar(
-      backgroundColor: tdBGColor,
-      elevation: 0,
-      title: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-        Icon(
-          Icons.menu,
-          color: tdBlack,
-          size: 30,
-        ),
-        SizedBox(
-          height: 40,
-          width: 40,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: Image.asset('assets/images/avatar.jpeg'),
-          ),
-        ),
-      ]),
-    );
   }
 }
